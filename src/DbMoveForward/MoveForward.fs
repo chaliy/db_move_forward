@@ -2,16 +2,14 @@
 
 (* Model *)
 
-type TableRef = {
-    Name : string
-}
+type TableName = string
 
 type ColumnType =
 | String
 | Number
 | Decimal
 | PrimmaryKey
-| ForeignKey of TableRef
+| ForeignKey of TableName
 
 type Column = {
     Name : string
@@ -25,15 +23,15 @@ type Table = {
 
 type Moves =
 | AddTable of Table
-| AddColumn of (TableRef * Column)
+| AddColumn of (TableName * Column)
 
 type Step =
     abstract member Up : unit -> unit
 
 (* DSL *)
 
-let create_table name (cols : Column list) =        
-    Moves.AddTable({ Name = name
+let create_table (table : TableName) (cols : Column list) =        
+    Moves.AddTable({ Name = table
                      Columns = cols })
 
 let add_column table name (t : ColumnType) =        
@@ -44,7 +42,7 @@ let column name (t : ColumnType) : Column =
     { Name = name
       Type = t }
 
-let fkey name (t : TableRef) : Column =    
+let fkey name (t : TableName) : Column =    
     { Name = name
       Type = ForeignKey(t) }
 

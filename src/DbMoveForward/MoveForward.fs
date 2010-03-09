@@ -49,3 +49,26 @@ let fkey name (t : TableName) : Column =
 let pkey: Column =    
     { Name = "ID"
       Type = PrimmaryKey }
+
+
+module Tools =
+
+    open NHibernate.Cfg
+
+    let FromMoves moves = 
+        moves
+        |> Seq.groupBy(function
+                       | AddTable t -> t.Name
+                       | AddColumn (t, c) -> t )
+        |> Seq.map(fun (n, mm) -> { Name = n
+                                    Columns = mm
+                                              |> Seq.collect(function
+                                                             | AddTable t -> t.Columns
+                                                             | AddColumn (t, c) -> [c] )
+                                              |> Seq.toList })        
+
+    let FromConfig (conf : Configuration) =
+        conf.ClassMappings        
+        |> Seq.map(fun m -> m.Table)
+        |> Seq.map(fun t -> { Name = t.Name
+                              Columns = [] } )        

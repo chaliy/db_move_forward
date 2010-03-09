@@ -1,5 +1,7 @@
 ﻿module MoveForward
 
+(* Model *)
+
 type TableRef = {
     Name : string
 }
@@ -21,14 +23,22 @@ type Table = {
     Columns : Column list    
 }
 
+type Moves =
+| AddTable of Table
+| AddColumn of (TableRef * Column)
+
 type Step =
     abstract member Up : unit -> unit
 
+(* DSL *)
+
 let create_table name (cols : Column list) =        
-    { new Step with
-         member x.Up() = () }
-//    { Name = name
-//      Columns = cols }
+    Moves.AddTable({ Name = name
+                     Columns = cols })
+
+let add_column table name (t : ColumnType) =        
+    Moves.AddColumn(table, { Name = name
+                             Type = t })
 
 let column name (t : ColumnType) : Column =    
     { Name = name
@@ -38,6 +48,6 @@ let fkey name (t : TableRef) : Column =
     { Name = name
       Type = ForeignKey(t) }
 
-let primmaryKey: Column =    
+let pkey: Column =    
     { Name = "ID"
       Type = PrimmaryKey }

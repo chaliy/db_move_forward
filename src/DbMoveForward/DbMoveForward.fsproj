@@ -7,7 +7,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{2d53ad58-104c-47cb-af79-eb7c40b0d276}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>TryMoveForward</RootNamespace>
+    <RootNamespace>DbMoveForward</RootNamespace>
     <AssemblyName>DbMoveForward</AssemblyName>
     <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
     <TargetFrameworkProfile>Client</TargetFrameworkProfile>
@@ -43,7 +43,9 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MoveForward.fs" />
+    <Compile Include="Model.fs" />
     <Compile Include="20100101_Orders.fs" />
+    <Compile Include="20100112_Orders_Totals.fs" />
     <Compile Include="Program.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\FSharp\1.0\Microsoft.FSharp.Targets" Condition="!Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />

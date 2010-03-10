@@ -19,7 +19,7 @@ This is database migration tool inspired by Ruby on Rails Active Record Migratio
 
 ##  Info Scenario  ##
 
-1. Should check "__Versions" table and current version for migration.
+1. Should check "__MoveVersions" table and current version for migration.
    Display all available information.
 2. If config is correct should find all penfing steps. And display
    all applicable information.
@@ -27,10 +27,10 @@ This is database migration tool inspired by Ruby on Rails Active Record Migratio
 
 ## Init Scenario ##
 
-1. Should check and create tables "__MigrationVesions" 
-   and "__MigrationLog" (if not exists)
-2. Should add record to __MigrationVesions with migration
-   sequence name and version 0
+1. Should check and create tables "__MoveVesions" 
+   and "__MoveLog" (if not exists)
+2. Should add record to __MoveVesions with migration
+   sequence name and version "0"
 
 ##  General considerations  ##
 

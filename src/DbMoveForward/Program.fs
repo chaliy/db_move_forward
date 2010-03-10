@@ -14,7 +14,7 @@ open MoveForward.MovesTools
 
 let asm = System.Reflection.Assembly.GetEntryAssembly() 
 let stepResolver = StepsResolver(asm)
-let stepsToApply = stepResolver.Resolve()
+let stepsToApply = stepResolver.Resolve("0")
 let step = stepsToApply |> Seq.head
 
 printfn "Boom!"

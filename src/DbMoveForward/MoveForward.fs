@@ -109,9 +109,9 @@ module MovesTools =
             let falgs = BindingFlags.Static ||| BindingFlags.Public
             let p = t.GetProperty("up", falgs)
             if p = null then None
-            else Some(p.GetValue(null, null) :?> Moves list)            
+            else Some(p.GetValue(null, null) :?> Moves list)
 
-        let resolveSteps =
+        let resolveSteps lastVersion =
             asm.GetTypes()
             |> Seq.filter(fun x -> FSharpType.IsModule x)
             |> Seq.map(fun t -> (t, stepRegex.Match(t.Name)))
@@ -122,8 +122,9 @@ module MovesTools =
             |> Seq.filter(fun (t, v, mm) -> mm.IsSome)
             |> Seq.map(fun (t, v, mm) -> { Version = v
                                            Moves = mm.Value } )
+            |> Seq.skipWhile(fun s -> s.Version <= lastVersion)
         
-        member x.Resolve() = resolveSteps
+        member x.Resolve = resolveSteps
 
 module DbTools =
 
@@ -156,6 +157,7 @@ module DbTools =
 
         member x.InitVersion = initVersion
         member x.UpdateVersion = updateVersion
+        member x.CurrentVersion = currentVersion
             
 
     type MovesProcessor(db) =    
@@ -249,17 +251,19 @@ module Mover =
         
         let asm = System.Reflection.Assembly.GetEntryAssembly() 
         let stepResolver = StepsResolver(asm)
-        let init = Initializer(target)
-        let stepsToApply = stepResolver.Resolve()
+        let init = Initializer(target)        
                 
         let db = init.Database()
 
         let proc = MovesProcessor(db)
         let stuff = VersionsStuff(db)
+        let lastVersion = stuff.CurrentVersion target.Sequence
 
-//        stepsToApply
-//        |> Seq.iter(fun s ->
-//                        proc.ApplyMoves s.Moves
-//                        stuff.UpdateVersion target.Sequence s.Version )
+        let stepsToApply = stepResolver.Resolve(lastVersion)
+
+        stepsToApply
+        |> Seq.iter(fun s ->
+                        proc.ApplyMoves s.Moves
+                        stuff.UpdateVersion target.Sequence s.Version )
 
         ()

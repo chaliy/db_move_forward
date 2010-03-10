@@ -84,28 +84,37 @@ type DbTools(database : string) =
                           | String -> DataType.NVarChar(450)
                           | Text -> DataType.Text
                           | _ -> failwith "Column type is not supported yet"
-                           
 
-    let createTable table =
+    let enusreTable table =
         let srv = new Server()        
         let db = srv.Databases.[database]                
-        let name = resolveName table.Name
-        let tbl = new Table(db, fst(name), snd(name)) 
+        let name = resolveName table
+        new Table(db, fst(name), snd(name)) 
+
+    let buildColumn tbl c =
+        let dataType = resolveDataType c.Type
+        let clmn = new Column(tbl, c.Name, dataType) 
+        clmn.Nullable <- true
+        clmn
+                           
+    let createTable table =
+        let tbl = enusreTable table.Name
         
         table.Columns
-        |> Seq.map(fun c -> 
-                        let dataType = resolveDataType c.Type
-                        let clmn = new Column(tbl, c.Name, dataType) 
-                        clmn.Nullable <- true
-                        clmn )        
+        |> Seq.map(buildColumn tbl)        
         |> Seq.iter(tbl.Columns.Add)
         tbl.Create()
 
+    let createColumn table column =
+        let tbl = enusreTable table
+        let clmn = buildColumn tbl column               
+        tbl.Columns.Add(clmn)
+        tbl.Alter()
 
     let applyMoves moves =
         moves
         |> Seq.iter(function
-                    | AddTable t -> createTable(t)
-                    | _ -> () )
+                    | AddTable t -> createTable t
+                    | AddColumn (t, c) -> createColumn t c )
 
     member x.ApplyMoves = applyMoves

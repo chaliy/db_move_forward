@@ -30,6 +30,16 @@ type Moves =
 | AddTable of Table
 | AddColumn of (TableName * Column)
 
+type Step = {
+    Version : string
+    Moves : Moves list
+}
+
+type Target = {
+    Database : string
+    Sequence : string
+}
+
 (* DSL *)
 
 let create_schema name =        
@@ -83,21 +93,47 @@ module Denormalization =
         |> Seq.map(fun m -> m.Table)
         |> Seq.map(fun t -> { Name = { Schema = t.Schema
                                        Name = t.Name }
-                              Columns = [] } )        
+                              Columns = [] } )
+
+module MovesTools =
+
+    open System.Reflection
+    open Microsoft.FSharp.Reflection
+    
+    let stepRegex = new System.Text.RegularExpressions.Regex("_(?<version>\d*)_.?")    
+    
+    
+    type StepsResolver(asm : Assembly) =
+
+        let resolveMoves (t : System.Type) =
+            let falgs = BindingFlags.Static ||| BindingFlags.Public
+            let p = t.GetProperty("up", falgs)
+            if p = null then None
+            else Some(p.GetValue(null, null) :?> Moves list)            
+
+        let resolveSteps =
+            asm.GetTypes()
+            |> Seq.filter(fun x -> FSharpType.IsModule x)
+            |> Seq.map(fun t -> (t, stepRegex.Match(t.Name)))
+            |> Seq.filter(fun (t, m) -> m.Success)
+            |> Seq.map(fun (t, m) -> (t, m.Groups.["version"].Value))
+            |> Seq.sortBy(fun (t, v) -> v)
+            |> Seq.map(fun (t, v) -> (t, v, resolveMoves t))
+            |> Seq.filter(fun (t, v, mm) -> mm.IsSome)
+            |> Seq.map(fun (t, v, mm) -> { Version = v
+                                           Moves = mm.Value } )
+        
+        member x.Resolve() = resolveSteps
 
 module DbTools =
 
     open Microsoft.SqlServer.Management.Smo    
 
-    type Database with
-      member x.Tables2 = x.Tables |> Seq.cast<Table>     
-
-    type Target = {
-        Database : string
-        Sequence : string
-    }           
+    type internal Database with
+      member x.Tables2 = x.Tables |> Seq.cast<Table>
+      
         
-    type SystemStuff(db : Database) =
+    type VersionsStuff(db : Database) =
 
         let initVersion sequenceName =
             let script = sprintf "insert into __MoveVersions
@@ -123,15 +159,13 @@ module DbTools =
             
 
     type MovesProcessor(db) =    
-        
-        let resolveDataType = function
-                              | String -> DataType.NVarChar(450)
-                              | Text -> DataType.Text
-                              | Decimal -> DataType.Decimal(5, 19)
-                              | _ -> failwith "Column type is not supported yet"        
-
+                
         let buildColumn tbl c =
-            let dataType = resolveDataType c.Type
+            let dataType = match c.Type with
+                           | String -> DataType.NVarChar(450)
+                           | Text -> DataType.Text
+                           | Decimal -> DataType.Decimal(5, 19)
+                           | _ -> failwith "Column type is not supported yet"        
             let clmn = new Column(tbl, c.Name, dataType) 
             clmn.Nullable <- true
             clmn
@@ -169,7 +203,7 @@ module DbTools =
         member x.ApplyMoves = applyMoves    
 
     type Initializer(target : Target) =
-        let srv = new Server()        
+        let srv = new Server()
 
         let createTable db name (columns : (Table -> Column) list) =
             let tbl = new Table(db, name)            
@@ -197,12 +231,35 @@ module DbTools =
                                               fun t -> Column(t, "Message", DataType.Text)
                                               fun t -> Column(t, "EntryDate", DataType.DateTime) ]
 
-            let stuff = SystemStuff(db)
+            let stuff = VersionsStuff(db)
             stuff.InitVersion(target.Sequence)
 
 
             ()
-                                                    
-        //let versions = db.Tables2 |> Seq.find(fun x -> x.Name = "__MoveVersions")
-        //let logs = db.Tables2 |> Seq.find(fun x -> x.Name = "__MoveLog")     
-        member x.Init() = init()   
+                                                                
+        member x.Init() = init()
+        member x.Database() = srv.Databases.[target.Database] 
+
+module Mover =
+
+    open MovesTools
+    open DbTools
+    
+    let Move(target) =
+        
+        let asm = System.Reflection.Assembly.GetEntryAssembly() 
+        let stepResolver = StepsResolver(asm)
+        let init = Initializer(target)
+        let stepsToApply = stepResolver.Resolve()
+                
+        let db = init.Database()
+
+        let proc = MovesProcessor(db)
+        let stuff = VersionsStuff(db)
+
+//        stepsToApply
+//        |> Seq.iter(fun s ->
+//                        proc.ApplyMoves s.Moves
+//                        stuff.UpdateVersion target.Sequence s.Version )
+
+        ()

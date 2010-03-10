@@ -48,6 +48,9 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="FSharp.PowerPack.Metadata">
+      <HintPath>..\..\lib\PowerPack\FSharp.PowerPack.Metadata.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.SqlServer.ConnectionInfo">
       <HintPath>..\..\lib\Smo\Microsoft.SqlServer.ConnectionInfo.dll</HintPath>
     </Reference>

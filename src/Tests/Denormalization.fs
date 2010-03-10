@@ -9,7 +9,7 @@ module ``Describe resolving tables from moves`` =
     
     let ``return at least something`` = spec {
         
-        let moves = [AddTable({ Name = "Test"
+        let moves = [AddTable({ Name = { Schema = "Test"; Name = "Test" }
                                 Columns = [] })]
 
         let tables = Denormalization.FromMoves moves
@@ -19,9 +19,9 @@ module ``Describe resolving tables from moves`` =
     
     let ``resolve all tables`` = spec {
         
-        let moves = [AddTable({ Name = "Test"
+        let moves = [AddTable({ Name = { Schema = "Test"; Name = "Test" }
                                 Columns = [] })
-                     AddTable({ Name = "Test2"
+                     AddTable({ Name = { Schema = "Test"; Name = "Test2" }
                                 Columns = [] })]
 
         let tables = Denormalization.FromMoves moves
@@ -31,7 +31,7 @@ module ``Describe resolving tables from moves`` =
     
     let ``resolve all columns for table`` = spec {
         
-        let moves = [AddTable({ Name = "Test"
+        let moves = [AddTable({ Name = { Schema = "Test"; Name = "Test" }
                                 Columns = [column "StringColumn" String 
                                            column "DecimalColumn" Decimal ] }) ]
 
@@ -42,11 +42,11 @@ module ``Describe resolving tables from moves`` =
     
     let ``resolve all columns including added for table`` = spec {
         
-        let moves = [AddTable({ Name = "Test"
+        let moves = [AddTable({ Name = { Schema = "Test"; Name = "Test" }
                                 Columns = [column "StringColumn" String 
                                            column "DecimalColumn" Decimal ] })
-                     AddColumn("Test", { Name = "AddedColumn"
-                                         Type = Number } ) ]
+                     AddColumn({ Schema = "Test"; Name = "Test" }, { Name = "AddedColumn"
+                                                                     Type = Number } ) ]
 
         let table = (Denormalization.FromMoves moves) |> Seq.head
 

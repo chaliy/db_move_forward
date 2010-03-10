@@ -4,8 +4,9 @@ open MoveForward
 open Model
 
 let up = [   
+    create_schema "Invoicing"
     create_table Tables.Orders [                
         column "Test" String
-        fkey "Customers" Tables.Customers
+        //fkey "Customers" Tables.Customers
     ]
 ]

@@ -4,8 +4,8 @@ This is database migration tool inspired by Ruby on Rails Active Record Migratio
   
 ##  Upping Scenario ##
 
-1. Check if database has tables with name "__MigrationVesions" 
-   and "__MigrationLog" if not exit and propose to init ( this
+1. Check if database has tables with name "__MoveVesions" 
+   and "__MoveLog" if not exit and propose to init ( this
    behaviour is fool protection if database name is 
    incorrect )
 2. Get version for migration name (migration name is ability 

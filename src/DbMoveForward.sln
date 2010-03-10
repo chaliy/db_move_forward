@@ -5,6 +5,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "DbMoveForward", "DbMoveForw
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Tests", "Tests\Tests.fsproj", "{5AA90500-0F42-4310-BA4F-C910E4E0C041}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "InvoicingExample", "InvoicingExample\InvoicingExample.fsproj", "{C76009C1-C4D5-4A59-AB90-E4F3715D72DE}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x86 = Debug|x86
@@ -19,6 +21,10 @@ Global
 		{5AA90500-0F42-4310-BA4F-C910E4E0C041}.Debug|x86.Build.0 = Debug|x86
 		{5AA90500-0F42-4310-BA4F-C910E4E0C041}.Release|x86.ActiveCfg = Release|x86
 		{5AA90500-0F42-4310-BA4F-C910E4E0C041}.Release|x86.Build.0 = Release|x86
+		{C76009C1-C4D5-4A59-AB90-E4F3715D72DE}.Debug|x86.ActiveCfg = Debug|x86
+		{C76009C1-C4D5-4A59-AB90-E4F3715D72DE}.Debug|x86.Build.0 = Debug|x86
+		{C76009C1-C4D5-4A59-AB90-E4F3715D72DE}.Release|x86.ActiveCfg = Release|x86
+		{C76009C1-C4D5-4A59-AB90-E4F3715D72DE}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

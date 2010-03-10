@@ -153,7 +153,7 @@ module DbTools =
             let query = sprintf "select * from __MoveVersions where Sequence = '%s'" sequenceName
             let result = db.ExecuteWithResults(query)
             let row = result.Tables.[0].Rows.[0]
-            (row.["Vesion"] :?> string)
+            (row.["Version"] :?> string)
 
         member x.InitVersion = initVersion
         member x.UpdateVersion = updateVersion
@@ -251,14 +251,12 @@ module Mover =
         
         let asm = System.Reflection.Assembly.GetEntryAssembly() 
         let stepResolver = StepsResolver(asm)
-        let init = Initializer(target)        
-                
+        let init = Initializer(target)                        
         let db = init.Database()
-
         let proc = MovesProcessor(db)
         let stuff = VersionsStuff(db)
-        let lastVersion = stuff.CurrentVersion target.Sequence
 
+        let lastVersion = stuff.CurrentVersion target.Sequence
         let stepsToApply = stepResolver.Resolve(lastVersion)
 
         stepsToApply

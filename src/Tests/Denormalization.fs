@@ -3,6 +3,8 @@
 open FsSpec
         
 open MoveForward
+open MoveForward.Lang
+open MoveForward.Model
 
 module ``Describe resolving tables from moves`` =
     

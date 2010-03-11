@@ -1,8 +1,42 @@
-﻿module Model
+﻿module MoveForward.Model
 
-open MoveForward
+(* Model *)
 
-module Tables =
+type TableName = {
+    Schema : string
+    Name : string
+}
 
-    let Customers = { Schema = "Invoicing"; Name = "Customers" }
-    let Orders = { Schema = "Invoicing"; Name = "Orders" }
+type ColumnType =
+| String
+| Text
+| Number
+| Decimal
+| PrimmaryKey
+| ForeignKey of TableName
+
+type Column = {
+    Name : string
+    Type : ColumnType
+}
+
+type Table = {
+    Name : TableName
+    Columns : Column list    
+}
+
+type Moves =
+| AddSchema of string
+| AddTable of Table
+| AddColumn of (TableName * Column)
+
+type Step = {
+    Version : string
+    Moves : Moves list
+}
+
+type Target = {
+    Database : string
+    Sequence : string
+}
+

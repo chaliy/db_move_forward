@@ -1,6 +1,7 @@
 ﻿module _20100113_Customers
 
 open MoveForward
+open MoveForward.Lang
 open Model
 
 let up = [       

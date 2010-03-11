@@ -4,6 +4,7 @@ open FsSpec
 open Helpers
 
 open MoveForward
+open MoveForward.Model
 open MoveForward.MovesTools
 
 (* Helpers *)

@@ -1,6 +1,6 @@
 ﻿module Model
 
-open MoveForward
+open MoveForward.Model
 
 module Tables =
 

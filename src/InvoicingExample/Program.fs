@@ -1,6 +1,7 @@
 ﻿open MoveForward
+open MoveForward.Model
 
 let target = { Database = "MoveTest"
                Sequence = "Test" }
 
-Mover.Move(target)
+Moving.Move(target)

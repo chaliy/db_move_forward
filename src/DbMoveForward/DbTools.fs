@@ -35,12 +35,24 @@ type VersionsStuff(db : Database) =
         
 
 type MovesProcessor(db) =    
+
+    let systemColumns : Model.Column list = [
+        { Name = "Version"; Type = Model.ColumnType.Guid}
+        { Name = "LastUpdatedBy"; Type = Model.ColumnType.Guid }
+        { Name = "LastUpdatedDate"; Type = Model.ColumnType.DateTime }
+        { Name = "CreatedBy"; Type = Model.ColumnType.Guid }
+        { Name = "CreatedDate"; Type = Model.ColumnType.DateTime }
+        { Name = "ContextID"; Type = Model.ColumnType.Guid }
+    ]
             
     let buildColumn tbl c =
         let dataType = match c.Type with
                        | String -> DataType.NVarChar(450)
-                       | Text -> DataType.Text
+                       | Text -> DataType.NVarCharMax
+                       | Number -> DataType.Int
+                       | BigNumber -> DataType.BigInt
                        | Decimal -> DataType.Decimal(5, 19)                           
+                       | Enum -> DataType.NVarChar(64)
                        | _ -> failwith "Column type is not supported yet"        
         let clmn = new Column(tbl, c.Name, dataType) 
         clmn.Nullable <- true            
@@ -56,12 +68,13 @@ type MovesProcessor(db) =
         pkeyI.IndexKeyType <- IndexKeyType.DriPrimaryKey
         pkeyI.IndexedColumns.Add(new IndexedColumn(pkeyI, pkeyName))
         target.Indexes.Add(pkeyI)
-                           
-        // Add other columns
-        table.Columns
+                                   
+        table.Columns // Add other columns
+        |> List.append(systemColumns) // Also add support columns...                                        
         |> Seq.map(buildColumn target)        
         |> Seq.iter(target.Columns.Add)
-                                
+                
+
         target.Create()
 
     let enusreTable (name : TableName) =                        

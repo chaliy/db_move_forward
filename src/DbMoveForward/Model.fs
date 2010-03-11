@@ -11,8 +11,11 @@ type ColumnType =
 | String
 | Text
 | Number
+| BigNumber
 | Decimal
-| PrimmaryKey
+| Enum
+| Guid
+| DateTime
 | ForeignKey of TableName
 
 type Column = {
@@ -39,4 +42,3 @@ type Target = {
     Database : string
     Sequence : string
 }
-

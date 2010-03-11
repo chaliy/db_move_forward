@@ -20,8 +20,3 @@ let column name (t : ColumnType) : Column =
 let fkey name (t : TableName) : Column =    
     { Name = name
       Type = ForeignKey(t) }
-
-let pkey: Column =    
-    { Name = "ID"
-      Type = PrimmaryKey }
-

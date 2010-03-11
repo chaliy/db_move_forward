@@ -29,4 +29,3 @@ type StepsResolver(asm : Assembly) =
         |> Seq.skipWhile(fun s -> s.Version <= lastVersion)
     
     member x.Resolve = resolveSteps
-

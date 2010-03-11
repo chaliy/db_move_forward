@@ -71,21 +71,19 @@ module Denormalization =
     open NHibernate.Cfg
 
     let FromMoves moves = 
-        moves
-        |> Seq.filter(function
-                      | AddTable x -> true
-                      | AddColumn  x -> true
-                      | _ -> false )
+        moves        
         |> Seq.groupBy(function
-                       | AddTable t -> t.Name
-                       | AddColumn (t, c) -> t
-                       | _ -> failwith "Move is not supported" )
+                       | AddTable t -> Some(t.Name)
+                       | AddColumn (t, c) -> Some(t)
+                       | _ -> None )
+        |> Seq.filter(fun (n, mm) -> n.IsSome)
+        |> Seq.map(fun (n, mm) -> (n.Value, mm))
         |> Seq.map(fun (n, mm) -> { Name = n
                                     Columns = mm
                                               |> Seq.collect(function
                                                              | AddTable t -> t.Columns
                                                              | AddColumn (t, c) -> [c]
-                                                             | _ -> failwith "Move is not supported" )
+                                                             | _ -> [] )
                                               |> Seq.toList })        
 
     let FromConfig (conf : Configuration) =
@@ -166,20 +164,29 @@ module DbTools =
             let dataType = match c.Type with
                            | String -> DataType.NVarChar(450)
                            | Text -> DataType.Text
-                           | Decimal -> DataType.Decimal(5, 19)
+                           | Decimal -> DataType.Decimal(5, 19)                           
                            | _ -> failwith "Column type is not supported yet"        
             let clmn = new Column(tbl, c.Name, dataType) 
-            clmn.Nullable <- true
+            clmn.Nullable <- true            
             clmn
                                
         let createTable table =            
-            let tbl = new Table(db, table.Name.Name, table.Name.Schema)
+            let target = new Table(db, table.Name.Name, table.Name.Schema)
             
+            // Create primmary key
+            let pkeyName = table.Name.Name + "ID"
+            target.Columns.Add(new Column(target, pkeyName, DataType.UniqueIdentifier))                    
+            let pkeyI = new Index(target, pkeyName + "_PK")
+            pkeyI.IndexKeyType <- IndexKeyType.DriPrimaryKey
+            pkeyI.IndexedColumns.Add(new IndexedColumn(pkeyI, pkeyName))
+            target.Indexes.Add(pkeyI)
+                               
+            // Add other columns
             table.Columns
-            |> Seq.map(buildColumn tbl)        
-            |> Seq.iter(tbl.Columns.Add)
-
-            tbl.Create()
+            |> Seq.map(buildColumn target)        
+            |> Seq.iter(target.Columns.Add)
+                                    
+            target.Create()
 
         let enusreTable (name : TableName) =                        
             db.Tables2

@@ -41,9 +41,6 @@
     <Compile Include="MoveForward.fs" />
   </ItemGroup>
   <ItemGroup>
-    <Reference Include="FSharp.PowerPack.Metadata">
-      <HintPath>..\..\lib\PowerPack\FSharp.PowerPack.Metadata.dll</HintPath>
-    </Reference>
     <Reference Include="Microsoft.SqlServer.ConnectionInfo">
       <HintPath>..\..\lib\Smo\Microsoft.SqlServer.ConnectionInfo.dll</HintPath>
     </Reference>
@@ -55,6 +52,9 @@
     </Reference>
     <Reference Include="Microsoft.SqlServer.SmoExtended">
       <HintPath>..\..\lib\Smo\Microsoft.SqlServer.SmoExtended.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.SqlEnum">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.SqlEnum.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />

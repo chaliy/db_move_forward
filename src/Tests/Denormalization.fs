@@ -3,7 +3,6 @@
 open FsSpec
         
 open MoveForward
-open MoveForward.Lang
 open MoveForward.Model
 
 module ``Describe resolving tables from moves`` =
@@ -34,8 +33,8 @@ module ``Describe resolving tables from moves`` =
     let ``resolve all columns for table`` = spec {
         
         let moves = [AddTable({ Name = { Schema = "Test"; Name = "Test" }
-                                Columns = [column "StringColumn" String 
-                                           column "DecimalColumn" Decimal ] }) ]
+                                Columns = [{Name = "StringColumn"; Type = (String(150)) }
+                                           {Name = "DecimalColumn"; Type = Decimal } ] }) ]
 
         let table = (Denormalization.FromMoves moves) |> Seq.head
 
@@ -45,10 +44,10 @@ module ``Describe resolving tables from moves`` =
     let ``resolve all columns including added for table`` = spec {
         
         let moves = [AddTable({ Name = { Schema = "Test"; Name = "Test" }
-                                Columns = [column "StringColumn" String 
-                                           column "DecimalColumn" Decimal ] })
+                                Columns = [{Name = "StringColumn"; Type = (String(150)) }
+                                           {Name = "DecimalColumn"; Type = Decimal } ] })
                      AddColumn({ Schema = "Test"; Name = "Test" }, { Name = "AddedColumn"
-                                                                     Type = Number } ) ]
+                                                                     Type = Int } ) ]
 
         let table = (Denormalization.FromMoves moves) |> Seq.head
 

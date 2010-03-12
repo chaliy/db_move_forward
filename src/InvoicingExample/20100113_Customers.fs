@@ -1,13 +1,11 @@
 ﻿module _20100113_Customers
 
-open MoveForward
-open MoveForward.Lang
-open Model
+open Shared
 
 let up = [       
-    create_table Tables.Customers [                
-        column "Test" String
-        column "Test12" Text
-        column "Age" Decimal
+    entity Invoicing.Order [                
+        field "Test" String
+        field "Test12" Text
+        field "Age" Number
     ]
 ]

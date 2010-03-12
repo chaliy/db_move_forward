@@ -8,12 +8,11 @@ type TableName = {
 }
 
 type ColumnType =
-| String
+| String of int
 | Text
-| Number
-| BigNumber
+| Int
+| BigInt
 | Decimal
-| Enum
 | Guid
 | DateTime
 | ForeignKey of TableName

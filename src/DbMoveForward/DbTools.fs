@@ -47,12 +47,11 @@ type MovesProcessor(db) =
             
     let buildColumn tbl c =
         let dataType = match c.Type with
-                       | String -> DataType.NVarChar(450)
+                       | String x -> DataType.NVarChar(x)
                        | Text -> DataType.NVarCharMax
-                       | Number -> DataType.Int
-                       | BigNumber -> DataType.BigInt
-                       | Decimal -> DataType.Decimal(5, 19)                           
-                       | Enum -> DataType.NVarChar(64)
+                       | Int -> DataType.Int
+                       | BigInt -> DataType.BigInt
+                       | Decimal -> DataType.Decimal(5, 19)
                        | _ -> failwith "Column type is not supported yet"        
         let clmn = new Column(tbl, c.Name, dataType) 
         clmn.Nullable <- true            
@@ -71,7 +70,7 @@ type MovesProcessor(db) =
                                    
         table.Columns // Add other columns
         |> List.append(systemColumns) // Also add support columns...                                        
-        |> Seq.map(buildColumn target)        
+        |> Seq.map(buildColumn target)
         |> Seq.iter(target.Columns.Add)
                 
 

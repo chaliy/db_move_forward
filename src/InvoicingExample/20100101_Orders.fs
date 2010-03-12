@@ -1,12 +1,10 @@
 ﻿module _20100101_Orders
 
-open MoveForward
-open MoveForward.Lang
-open Model
+open Shared
 
 let up = [   
-    create_schema "Invoicing"
-    create_table Tables.Orders [                
-        column "Test" String        
+    schema Invoicing.Name
+    entity Invoicing.Order [                
+        field "Test" String        
     ]
 ]

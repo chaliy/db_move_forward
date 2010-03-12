@@ -17,7 +17,7 @@ type StepsResolver(asm : Assembly) =
 
     let resolveSteps lastVersion =
         asm.GetTypes()
-        |> Seq.filter(fun x -> FSharpType.IsModule x)
+        |> Seq.filter FSharpType.IsModule
         |> Seq.map(fun t -> (t, stepRegex.Match(t.Name)))
         |> Seq.filter(fun (t, m) -> m.Success)
         |> Seq.map(fun (t, m) -> (t, m.Groups.["version"].Value))
@@ -26,6 +26,6 @@ type StepsResolver(asm : Assembly) =
         |> Seq.filter(fun (t, v, mm) -> mm.IsSome)
         |> Seq.map(fun (t, v, mm) -> { Version = v
                                        Moves = mm.Value } )
-        |> Seq.skipWhile(fun s -> s.Version <= lastVersion)
+        |> Seq.skipWhile(fun s -> s.Version <= lastVersion)    
     
     member x.Resolve = resolveSteps

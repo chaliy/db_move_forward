@@ -111,8 +111,7 @@ type Initializer(target : Target) =
         |> List.iter(target.Columns.Add)            
 
         target.Create()
-        target
-        
+        target            
 
     let init() =
         let db = new Smo.Database(srv, target.Database)
@@ -131,9 +130,7 @@ type Initializer(target : Target) =
 
         let stuff = VersionsStuff(db)
         stuff.InitVersion(target.Sequence)
-
-
-        ()
+        ()               
                                                             
     member x.Init() = init()
     member x.Database() = srv.Databases.[target.Database] 

@@ -6,4 +6,4 @@ let target = { Database = "MoveTest"
 
 //let init = DbTools.Initializer(target)
 //init.Init()
-Moving.Move(target) 
+Runner.Move(target) 

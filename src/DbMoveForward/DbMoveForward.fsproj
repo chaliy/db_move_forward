@@ -42,7 +42,7 @@
     <Compile Include="Denormalization.fs" />
     <Compile Include="MovesTools.fs" />
     <Compile Include="DbTools.fs" />
-    <Compile Include="Moving.fs" />
+    <Compile Include="Runner.fs" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="Microsoft.SqlServer.ConnectionInfo">

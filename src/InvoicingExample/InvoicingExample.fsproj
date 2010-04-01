@@ -43,10 +43,14 @@
     <Compile Include="20100112_Orders_Totals.fs" />
     <Compile Include="20100113_Customers.fs" />
     <Compile Include="20100114_Order_Customers.fs" />
+    <Compile Include="20100115_CustomerStars.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.SqlServer.Smo">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.Smo.dll</HintPath>
+    </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
     <Reference Include="System" />

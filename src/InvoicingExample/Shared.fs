@@ -33,7 +33,7 @@ let field name (t : FieldType) : Column =
       Type = Utils.makeColumnType t }
 
 let reference name (e : EntityName) : Column =    
-    { Name = name
+    { Name = name + "ID"
       Type = ColumnType.ForeignKey(Utils.makeTableName e) }
 
 let systemColumns = [
@@ -71,4 +71,5 @@ module Invoicing =
     let Name = "Invoicing"
 
     let Customer = { Module = Name; Name = "Customer" }
-    let Order = { Module = Name; Name = "Order" }
+    let CustomerStar = { Module = Name; Name = "CustomerStar" }
+    let Order = { Module = Name; Name = "Order" }    

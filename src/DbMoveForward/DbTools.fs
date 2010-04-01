@@ -61,7 +61,7 @@ type MovesProcessor(db) =
         | ForeignKey referencee ->    
             addColumnOfType Smo.DataType.UniqueIdentifier                                                                     
             // Create foreignkey...
-            let fk = Smo.ForeignKey(target, referencee.Name + "_" + col.Name + "_FK")                                          
+            let fk = Smo.ForeignKey(target, target.Name + "_" + col.Name + "_FK")                                          
             let fkc = Smo.ForeignKeyColumn(fk, col.Name, col.Name)
             fk.Columns.Add(fkc)                                 
             fk.ReferencedTable <- referencee.Name

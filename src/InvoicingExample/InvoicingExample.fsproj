@@ -42,6 +42,7 @@
     <Compile Include="20100101_Orders.fs" />
     <Compile Include="20100112_Orders_Totals.fs" />
     <Compile Include="20100113_Customers.fs" />
+    <Compile Include="20100114_Order_Customers.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config" />
   </ItemGroup>

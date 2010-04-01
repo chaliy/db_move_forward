@@ -32,6 +32,10 @@ let field name (t : FieldType) : Column =
     { Name = name
       Type = Utils.makeColumnType t }
 
+let reference name (e : EntityName) : Column =    
+    { Name = name
+      Type = ColumnType.ForeignKey(Utils.makeTableName e) }
+
 let systemColumns = [
         { Name = "Version"; Type = ColumnType.Guid}
         { Name = "LastUpdatedBy"; Type = ColumnType.Guid }
@@ -45,12 +49,22 @@ let schema name =
     Moves.AddSchema(name)
 
 let entity name (cols : Column list) =        
-            Moves.AddTable({ Name = Utils.makeTableName name
-                             Columns = cols |> List.append systemColumns })
+    let columns = 
+        [{ Name = name.Name + "ID"
+           Type = ColumnType.PrimmaryKey }]
+        |> List.append cols
+        |> List.append systemColumns 
+
+    Moves.AddTable({ Name = Utils.makeTableName name
+                     Columns = columns })
 
 let field_to entity name (t : FieldType) =        
     Moves.AddColumn(Utils.makeTableName entity, { Name = name
                                                   Type = Utils.makeColumnType t })
+
+let reference_to entity name (e : EntityName) =    
+    Moves.AddColumn(Utils.makeTableName entity, { Name = name + "ID"
+                                                  Type = ForeignKey(Utils.makeTableName e) })    
 
 module Invoicing =
     

@@ -15,6 +15,7 @@ type ColumnType =
 | Decimal
 | Guid
 | DateTime
+| PrimmaryKey
 | ForeignKey of TableName
 
 type Column = {

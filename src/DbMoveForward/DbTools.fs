@@ -1,14 +1,13 @@
 ﻿module MoveForward.DbTools
 
+open Microsoft.SqlServer.Management
+type internal Smo.Database with
+  member x.Tables2 = x.Tables |> Seq.cast<Smo.Table>
+
 open Model
-
-open Microsoft.SqlServer.Management.Smo    
-
-type internal Database with
-  member x.Tables2 = x.Tables |> Seq.cast<Table>
   
     
-type VersionsStuff(db : Database) =
+type VersionsStuff(db : Smo.Database) =
 
     let initVersion sequenceName =
         let script = sprintf "insert into __MoveVersions
@@ -32,62 +31,64 @@ type VersionsStuff(db : Database) =
     member x.InitVersion = initVersion
     member x.UpdateVersion = updateVersion
     member x.CurrentVersion = currentVersion
-        
+
 
 type MovesProcessor(db) =    
+    
+    let addColumn (col : Column) (target : Smo.Table) =        
+        let addColumnOfType dataType =
+            target.Columns.Add(new Smo.Column(target, col.Name, dataType))
 
-    let systemColumns : Model.Column list = [
-        { Name = "Version"; Type = Model.ColumnType.Guid}
-        { Name = "LastUpdatedBy"; Type = Model.ColumnType.Guid }
-        { Name = "LastUpdatedDate"; Type = Model.ColumnType.DateTime }
-        { Name = "CreatedBy"; Type = Model.ColumnType.Guid }
-        { Name = "CreatedDate"; Type = Model.ColumnType.DateTime }
-        { Name = "ContextID"; Type = Model.ColumnType.Guid }
-    ]
-            
-    let buildColumn tbl c =
-        let dataType = match c.Type with
-                       | String x -> DataType.NVarChar(x)
-                       | Text -> DataType.NVarCharMax
-                       | Int -> DataType.Int
-                       | BigInt -> DataType.BigInt
-                       | Decimal -> DataType.Decimal(5, 19)
-                       | _ -> failwith "Column type is not supported yet"        
-        let clmn = new Column(tbl, c.Name, dataType) 
-        clmn.Nullable <- true            
-        clmn
+        match col.Type with
+        | String x -> addColumnOfType(Smo.DataType.NVarChar(x))
+        | Text -> addColumnOfType Smo.DataType.NVarCharMax
+        | Int -> addColumnOfType Smo.DataType.Int
+        | BigInt -> addColumnOfType Smo.DataType.BigInt
+        | Decimal -> addColumnOfType(Smo.DataType.Decimal(5, 19))
+        | DateTime -> addColumnOfType Smo.DataType.DateTime
+        | Guid -> addColumnOfType Smo.DataType.UniqueIdentifier
+        | PrimmaryKey ->
+            // Create Column
+            let targetCol = Smo.Column(target, col.Name, Smo.DataType.UniqueIdentifier)
+            targetCol.Nullable <- false
+            target.Columns.Add(targetCol)
+            // Create index..
+            let pkeyI = Smo.Index(target, col.Name + "_PK")
+            pkeyI.IndexKeyType <- Smo.IndexKeyType.DriPrimaryKey
+            pkeyI.IndexedColumns.Add(Smo.IndexedColumn(pkeyI, col.Name))
+            target.Indexes.Add(pkeyI)            
+
+        | ForeignKey referencee ->    
+            addColumnOfType Smo.DataType.UniqueIdentifier                                                                     
+            // Create foreignkey...
+            let fk = Smo.ForeignKey(target, referencee.Name + "_" + col.Name + "_FK")                                          
+            let fkc = Smo.ForeignKeyColumn(fk, col.Name, col.Name)
+            fk.Columns.Add(fkc)                                 
+            fk.ReferencedTable <- referencee.Name
+            fk.ReferencedTableSchema <- referencee.Schema
+            target.ForeignKeys.Add(fk)            
+        
                            
     let createTable table = 
-        let target = new Table(db, table.Name.Name, table.Name.Schema)
+        let target = new Smo.Table(db, table.Name.Name, table.Name.Schema)
+                          
+        table.Columns
+        |> Seq.iter(fun c -> addColumn c target)                
         
-        // Create primmary key
-        let pkeyName = table.Name.Name + "ID"
-        target.Columns.Add(new Column(target, pkeyName, DataType.UniqueIdentifier))                    
-        let pkeyI = new Index(target, pkeyName + "_PK")
-        pkeyI.IndexKeyType <- IndexKeyType.DriPrimaryKey
-        pkeyI.IndexedColumns.Add(new IndexedColumn(pkeyI, pkeyName))
-        target.Indexes.Add(pkeyI)
-                                   
-        table.Columns // Add other columns
-        |> List.append(systemColumns) // Also add support columns...                                        
-        |> Seq.map(buildColumn target)
-        |> Seq.iter(target.Columns.Add)
-                
+        target.Create()    
+        
 
-        target.Create()
-
-    let enusreTable (name : TableName) =                        
+    let ensureTable (name : TableName) =                        
         db.Tables2
         |> Seq.find(fun t -> t.Name = name.Name)            
 
     let createColumn tableName column =
-        let tbl = enusreTable tableName
-        let clmn = buildColumn tbl column               
-        tbl.Columns.Add(clmn)
-        tbl.Alter()
+        let target = ensureTable tableName
+        addColumn column target
+        target.Alter()
 
     let createSchema name =
-        let sch = new Schema(db, name)
+        let sch = new Smo.Schema(db, name)
         sch.Create()            
 
     let applyMoves moves =
@@ -100,33 +101,33 @@ type MovesProcessor(db) =
     member x.ApplyMoves = applyMoves    
 
 type Initializer(target : Target) =
-    let srv = new Server()
+    let srv = Smo.Server()
 
-    let createTable db name (columns : (Table -> Column) list) =
-        let tbl = new Table(db, name)            
+    let createTable db name (columns : (Smo.Table -> Smo.Column) list) =
+        let target = Smo.Table(db, name)            
 
         columns
-        |> List.map(fun n -> n(tbl))
-        |> List.iter(tbl.Columns.Add)            
+        |> List.map(fun n -> n(target))
+        |> List.iter(target.Columns.Add)            
 
-        tbl.Create()
-        tbl
+        target.Create()
+        target
         
 
     let init() =
-        let db = new Database(srv, target.Database)
+        let db = new Smo.Database(srv, target.Database)
         db.Create()
 
         let versions = 
-            createTable db "__MoveVersions" [ fun t -> Column(t, "Sequence", DataType.NVarChar(450))                                                         
-                                              fun t -> Column(t, "Version", DataType.NVarChar(450))                                                  
-                                              fun t -> Column(t, "LastUpdated", DataType.DateTime) ]
+            createTable db "__MoveVersions" [ fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                                         
+                                              fun t -> Smo.Column(t, "Version", Smo.DataType.NVarChar(450))                                                  
+                                              fun t -> Smo.Column(t, "LastUpdated", Smo.DataType.DateTime) ]
 
         let logs = 
-            createTable db "__MoveLogs" [ fun t -> Column(t, "ID", DataType.UniqueIdentifier)                                                       
-                                          fun t -> Column(t, "Sequence", DataType.NVarChar(450))                                              
-                                          fun t -> Column(t, "Message", DataType.Text)
-                                          fun t -> Column(t, "EntryDate", DataType.DateTime) ]
+            createTable db "__MoveLogs" [ fun t -> Smo.Column(t, "ID", Smo.DataType.UniqueIdentifier)                                                       
+                                          fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                              
+                                          fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
+                                          fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ]
 
         let stuff = VersionsStuff(db)
         stuff.InitVersion(target.Sequence)
@@ -136,4 +137,3 @@ type Initializer(target : Target) =
                                                             
     member x.Init() = init()
     member x.Database() = srv.Databases.[target.Database] 
-

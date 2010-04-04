@@ -32,5 +32,36 @@ module ``Describe apply moves`` =
                                                                
         let result = db.Tables.["SimpleTable", schema.Name]
         result.should_not_be_null
-        result.Columns.Count.should_be_equal_to 1
+        result.Columns.Count.should_be_equal_to 1 // Just single column...
+    }
+
+    let ``create table with primmary key`` = spec {
+        movesProcessor.ApplyMoves([Moves.AddTable({ Name = {Schema = schema.Name
+                                                            Name = "TableWithPrimmaryKey" }
+                                                    Columns = [{ Name = "PrimmaryKeyColumn"
+                                                                 Type = ColumnType.PrimmaryKey }
+                                                               ] })])
+                                                               
+        let result = db.Tables.["TableWithPrimmaryKey", schema.Name]        
+        result.Columns.Count.should_be_equal_to 1 // Just single column...
+        result.Indexes.Count.should_be_equal_to 1 // Just single index...
+        let primmaryKeyIndex = result.Indexes.[0]
+        primmaryKeyIndex.IndexKeyType.should_be_equal_to Smo.IndexKeyType.DriPrimaryKey 
+        primmaryKeyIndex.IndexedColumns.Count.should_be_equal_to 1
+    }
+
+    let ``create table with foreign key`` = spec {
+        let refrenceeName = { Schema = schema.Name
+                              Name = "RefrenceeTable" }
+        movesProcessor.ApplyMoves(
+            [Moves.AddTable({ Name = refrenceeName
+                              Columns = [{ Name = "RefrenceeTableID"
+                                           Type = ColumnType.PrimmaryKey } ] })                                        
+             Moves.AddTable({ Name = {Schema = schema.Name
+                                      Name = "RefrencerTable" }
+                              Columns = [{ Name = "RefrenceeTableID"
+                                           Type = ColumnType.ForeignKey(refrenceeName) } ] })])
+                                                               
+        let result = db.Tables.["RefrencerTable", schema.Name]        
+        result.ForeignKeys.Count.should_be_equal_to 1 // Just single column...
     }

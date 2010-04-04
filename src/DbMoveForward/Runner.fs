@@ -19,7 +19,7 @@ let Run(target, force) =
 
     stepsToApply
     |> Seq.iter(fun s ->
-                    printf "Step %s in process" s.Version
+                    printfn "\r\nStep %s in process" s.Version
                     proc.ApplyMoves s.Moves
                     stuff.UpdateVersion target.Sequence s.Version
-                    printfn " -- OK" )    
+                    printfn "Step %s -- Done" s.Version )                        

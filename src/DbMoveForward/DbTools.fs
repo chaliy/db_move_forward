@@ -83,6 +83,7 @@ type MovesProcessor(db) =
         |> Seq.iter(fun c -> addColumn c target)                
         
         target.Create()    
+        printfn "Table %s has been created" table.Name.Name
         
 
     let ensureTable (name : TableName) =                        
@@ -93,6 +94,7 @@ type MovesProcessor(db) =
         let target = ensureTable tableName
         addColumn column target
         target.Alter()
+        printfn "Table %s has been altered with column %s" tableName.Name column.Name
 
     let createSchema name =
         if db.Schemas.Contains(name) then
@@ -100,6 +102,7 @@ type MovesProcessor(db) =
         else
             let sch = new Smo.Schema(db, name)
             sch.Create()
+            printfn "Schema %s has been created" name
 
     let applyMoves moves =
         moves
@@ -134,11 +137,15 @@ type Initializer(target : Target, ?force : bool) =
                                       fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
                                       fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ] |> ignore
 
+        printfn "Support tables __MoveVersions & __MoveLogs has been created"
+
         
 
     let createDatabase() =
         let db = new Smo.Database(srv, target.Database)
         db.Create()
+
+        printfn "Database %s has been created" target.Database
 
         createSupportTables(db)
                 

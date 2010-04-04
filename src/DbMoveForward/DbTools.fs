@@ -151,7 +151,7 @@ type Initializer(target : Target, ?force : bool) =
            if force then
                 createSupportTables(db)
            else                       
-                failwith "Support tables was not found"        
+                failwith "Support tables was not found, run tool with --force argument."        
         db
                 
     let ensureDatabase() =
@@ -159,7 +159,7 @@ type Initializer(target : Target, ?force : bool) =
             if force then
                 createDatabase()
             else
-                failwith "Database %s was not found" target.Database                                
+                failwith (sprintf "Database %s was not found, run tool with --force argument." target.Database)                                
         else
             ensureConfiguredDatabase()   
           

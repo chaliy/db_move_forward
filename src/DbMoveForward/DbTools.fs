@@ -8,27 +8,34 @@ open Shared
 open Model
     
 type VersionsStuff(db : Smo.Database) =
-
-    let initVersion sequenceName =
-        let script = sprintf "insert into __MoveVersions
-                                   ([Sequence], [Version], [LastUpdated])
-                             values
-                                   ('%s','0',getutcdate())" sequenceName
-        db.ExecuteNonQuery(script)
-
+    
     let updateVersion sequenceName version =
-        let script = sprintf "update __MoveVersions
-                                   set [Version] = '%s', [LastUpdated] = getutcdate()
-                             where Sequence = '%s'" version sequenceName
+        // TODO o_O... nothing else to say...
+        let script = sprintf "IF EXISTS (SELECT * FROM __MoveVersions WHERE Sequence = '%s')
+                                   UPDATE __MoveVersions
+                                 SET [Version] = '%s'
+                                    ,[LastUpdated] = getutcdate()
+                                 WHERE Sequence = '%s'
+                              ELSE
+                                 INSERT INTO __MoveVersions
+                                     ([Sequence]
+                                     ,[Version] 
+                                     ,[LastUpdated]) 
+                                 VALUES 
+                                     ('%s' 
+                                     ,'%s' 
+                                     ,getutcdate())" sequenceName version sequenceName sequenceName version
+                                                  
         db.ExecuteNonQuery(script)
         
     let currentVersion sequenceName =
         let query = sprintf "select * from __MoveVersions where Sequence = '%s'" sequenceName
         let result = db.ExecuteWithResults(query)
-        let row = result.Tables.[0].Rows.[0]
-        (row.["Version"] :?> string)
-
-    member x.InitVersion = initVersion
+        let table = result.Tables.[0]
+        if table.Rows.Count > 0 then
+            (table.Rows.[0].["Version"] :?> string)        
+        else "0"
+            
     member x.UpdateVersion = updateVersion
     member x.CurrentVersion = currentVersion
 
@@ -88,8 +95,11 @@ type MovesProcessor(db) =
         target.Alter()
 
     let createSchema name =
-        let sch = new Smo.Schema(db, name)
-        sch.Create()            
+        if db.Schemas.Contains(name) then
+            printfn "Schema %s already existis, skipped" name
+        else
+            let sch = new Smo.Schema(db, name)
+            sch.Create()
 
     let applyMoves moves =
         moves

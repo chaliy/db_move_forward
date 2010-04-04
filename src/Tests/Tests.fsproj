@@ -41,6 +41,7 @@
     <Compile Include="Helpers.fs" />
     <Compile Include="Denormalization.fs" />
     <Compile Include="MovesTools.fs" />
+    <Compile Include="MovesProcessor.fs" />
     <Compile Include="Program.fs" />
     <None Include="App.config">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
@@ -49,6 +50,24 @@
   <ItemGroup>
     <Reference Include="FsSpec">
       <HintPath>..\..\lib\FsSpec\FsSpec.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.ConnectionInfo">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.ConnectionInfo.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.ConnectionInfoExtended">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.ConnectionInfoExtended.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.Management.Sdk.Sfc">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.Management.Sdk.Sfc.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.Smo">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.Smo.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.SmoExtended">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.SmoExtended.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.SqlServer.SqlEnum">
+      <HintPath>..\..\lib\Smo\Microsoft.SqlServer.SqlEnum.dll</HintPath>
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />

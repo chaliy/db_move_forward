@@ -40,7 +40,9 @@ type VersionsStuff(db : Smo.Database) =
     member x.CurrentVersion = currentVersion
 
 
-type MovesProcessor(db) =    
+type MovesProcessor(db) =
+
+    let trace = new Event<string>()
     
     let addColumn (col : Column) (target : Smo.Table) =        
         let addColumnOfType dataType =
@@ -83,7 +85,7 @@ type MovesProcessor(db) =
         |> Seq.iter(fun c -> addColumn c target)                
         
         target.Create()    
-        printfn "Table %s has been created" table.Name.Name
+        trace.Trigger(sprintf "Table %s has been created" table.Name.Name)
         
 
     let ensureTable (name : TableName) =                        
@@ -94,15 +96,15 @@ type MovesProcessor(db) =
         let target = ensureTable tableName
         addColumn column target
         target.Alter()
-        printfn "Table %s has been altered with column %s" tableName.Name column.Name
+        trace.Trigger(sprintf "Table %s has been altered with column %s" tableName.Name column.Name)
 
     let createSchema name =
         if db.Schemas.Contains(name) then
-            printfn "Schema %s already existis, skipped" name
+            trace.Trigger(sprintf "Schema %s already existis, skipped" name)
         else
             let sch = new Smo.Schema(db, name)
             sch.Create()
-            printfn "Schema %s has been created" name
+            trace.Trigger(sprintf "Schema %s has been created" name)
 
     let applyMoves moves =
         moves
@@ -112,11 +114,13 @@ type MovesProcessor(db) =
                     | AddSchema n -> createSchema n )
 
     member x.ApplyMoves = applyMoves    
+    member x.Trace = trace.Publish
 
 
 type Initializer(target : Target, ?force : bool) =
     let force = defaultArg force false
     let srv = Smo.Server()
+    let trace = new Event<string>()
 
     let createTable db name (columns : (Smo.Table -> Smo.Column) list) =
         let target = Smo.Table(db, name)            
@@ -138,7 +142,7 @@ type Initializer(target : Target, ?force : bool) =
                                       fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
                                       fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ] |> ignore
 
-        printfn "Support tables __MoveVersions & __MoveLogs has been created"
+        trace.Trigger(sprintf "Support tables __MoveVersions & __MoveLogs has been created")
 
         
 
@@ -146,7 +150,7 @@ type Initializer(target : Target, ?force : bool) =
         let db = new Smo.Database(srv, target.Database)
         db.Create()
 
-        printfn "Database %s has been created" target.Database
+        trace.Trigger(sprintf "Database %s has been created" target.Database)
 
         createSupportTables(db)
                 
@@ -174,6 +178,7 @@ type Initializer(target : Target, ?force : bool) =
     let db = ensureDatabase()
 
     let backup(version) =
+        trace.Trigger(sprintf "Backup database...")
         let sqlBackup = new Smo.Backup()
         let backupTime = System.DateTime.UtcNow
         sqlBackup.Action <- Smo.BackupActionType.Database;
@@ -200,8 +205,9 @@ type Initializer(target : Target, ?force : bool) =
         
         sqlBackup.LogTruncation <- Smo.BackupTruncateLogType.NoTruncate;
 
-        sqlBackup.SqlBackup(srv);
-        
+        sqlBackup.SqlBackup(srv)
+        trace.Trigger(sprintf "Backup saved to %s\\%s" srv.BackupDirectory name)
                                        
     member x.Database = db 
     member x.Backup = backup
+    member x.Trace = trace.Publish

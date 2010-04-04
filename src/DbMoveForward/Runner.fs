@@ -6,8 +6,10 @@ open DbTools
 let Run(target, force) =
         
     let init = Initializer(target, force)
+    init.Trace.Add(printfn "%s")
     let db = init.Database        
     let proc = MovesProcessor(db)
+    proc.Trace.Add(printfn "%s")
     let stuff = VersionsStuff(db)
     let asm = System.Reflection.Assembly.GetEntryAssembly() 
     let stepResolver = StepsResolver(asm)    
@@ -18,8 +20,7 @@ let Run(target, force) =
     printfn "%i steps are pending" (stepsToApply |> Seq.length)
 
     // Backup database before appling steps..
-    // Probably also should stop connections first..    
-    printfn "Backup database..."
+    // Probably also should stop connections first..        
     init.Backup(lastVersion)
 
     for s in stepsToApply do

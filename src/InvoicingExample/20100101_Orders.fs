@@ -1,6 +1,6 @@
 ﻿module _20100101_Orders
 
-open Shared
+open Common
 
 let up = [   
     schema Invoicing.Name

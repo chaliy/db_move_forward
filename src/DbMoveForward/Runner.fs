@@ -3,7 +3,7 @@
 open MovesTools
 open DbTools
 
-let Move(target) =
+let Run(target) =
         
     let init = Initializer(target)                        
     let db = init.Database()

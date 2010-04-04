@@ -4,8 +4,8 @@ open Microsoft.SqlServer.Management
 type internal Smo.Database with
   member x.Tables2 = x.Tables |> Seq.cast<Smo.Table>
 
+open Shared
 open Model
-  
     
 type VersionsStuff(db : Smo.Database) =
 
@@ -100,7 +100,8 @@ type MovesProcessor(db) =
 
     member x.ApplyMoves = applyMoves    
 
-type Initializer(target : Target) =
+type Initializer(target : Target, ?force : bool) =
+    let force = defaultArg force false
     let srv = Smo.Server()
 
     let createTable db name (columns : (Smo.Table -> Smo.Column) list) =
@@ -111,26 +112,46 @@ type Initializer(target : Target) =
         |> List.iter(target.Columns.Add)            
 
         target.Create()
-        target            
+        target               
 
-    let init() =
+    let createDatabase() =
         let db = new Smo.Database(srv, target.Database)
         db.Create()
-
-        let versions = 
-            createTable db "__MoveVersions" [ fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                                         
-                                              fun t -> Smo.Column(t, "Version", Smo.DataType.NVarChar(450))                                                  
-                                              fun t -> Smo.Column(t, "LastUpdated", Smo.DataType.DateTime) ]
-
-        let logs = 
-            createTable db "__MoveLogs" [ fun t -> Smo.Column(t, "ID", Smo.DataType.UniqueIdentifier)                                                       
-                                          fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                              
-                                          fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
-                                          fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ]
-
+        
+        createTable db "__MoveVersions" [ fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                                         
+                                          fun t -> Smo.Column(t, "Version", Smo.DataType.NVarChar(450))                                                  
+                                          fun t -> Smo.Column(t, "LastUpdated", Smo.DataType.DateTime) ] |> ignore
+    
+        createTable db "__MoveLogs" [ fun t -> Smo.Column(t, "ID", Smo.DataType.UniqueIdentifier)                                                       
+                                      fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                              
+                                      fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
+                                      fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ] |> ignore
+        
         let stuff = VersionsStuff(db)
         stuff.InitVersion(target.Sequence)
-        ()               
-                                                            
-    member x.Init() = init()
-    member x.Database() = srv.Databases.[target.Database] 
+        db
+
+    let ensureConfiguredDatabase() =
+        let db = new Smo.Database(srv, target.Database)
+        if db.Tables.Contains("__MoveVersions") = false
+           || db.Tables.Contains("__MoveLogs") = false then
+           if force then
+                createDatabase()
+           else                       
+                failwith "Support tables was not found"
+        else
+            db
+
+                
+    let ensureDatabase() =
+        if srv.Databases.Contains(target.Database) = false then
+            if force then
+                createDatabase()
+            else
+                failwith "Database %s was not found" target.Database                                
+        else
+            ensureConfiguredDatabase()   
+          
+    let db = ensureDatabase()
+                                       
+    member x.Database() = db 

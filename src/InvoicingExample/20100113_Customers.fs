@@ -1,6 +1,6 @@
 ﻿module _20100113_Customers
 
-open Shared
+open Common
 
 let up = [       
     entity Invoicing.Customer [

@@ -3,9 +3,9 @@
 open MovesTools
 open DbTools
 
-let Run(target) =
+let Run(target, force) =
         
-    let init = Initializer(target)                        
+    let init = Initializer(target, force)
     let db = init.Database()
     let proc = MovesProcessor(db)
     let stuff = VersionsStuff(db)
@@ -20,6 +20,4 @@ let Run(target) =
     stepsToApply
     |> Seq.iter(fun s ->
                     proc.ApplyMoves s.Moves
-                    stuff.UpdateVersion target.Sequence s.Version )
-
-    ()
+                    stuff.UpdateVersion target.Sequence s.Version )    

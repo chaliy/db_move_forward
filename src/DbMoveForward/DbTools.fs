@@ -114,10 +114,7 @@ type Initializer(target : Target, ?force : bool) =
         target.Create()
         target               
 
-    let createDatabase() =
-        let db = new Smo.Database(srv, target.Database)
-        db.Create()
-        
+    let createSupportTables db =
         createTable db "__MoveVersions" [ fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                                         
                                           fun t -> Smo.Column(t, "Version", Smo.DataType.NVarChar(450))                                                  
                                           fun t -> Smo.Column(t, "LastUpdated", Smo.DataType.DateTime) ] |> ignore
@@ -126,9 +123,15 @@ type Initializer(target : Target, ?force : bool) =
                                       fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                              
                                       fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
                                       fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ] |> ignore
+
         
-        let stuff = VersionsStuff(db)
-        stuff.InitVersion(target.Sequence)
+
+    let createDatabase() =
+        let db = new Smo.Database(srv, target.Database)
+        db.Create()
+
+        createSupportTables(db)
+                
         db
 
     let ensureConfiguredDatabase() =
@@ -136,12 +139,10 @@ type Initializer(target : Target, ?force : bool) =
         if db.Tables.Contains("__MoveVersions") = false
            || db.Tables.Contains("__MoveLogs") = false then
            if force then
-                createDatabase()
+                createSupportTables(db)
            else                       
-                failwith "Support tables was not found"
-        else
-            db
-
+                failwith "Support tables was not found"        
+        db
                 
     let ensureDatabase() =
         if srv.Databases.Contains(target.Database) = false then

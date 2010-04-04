@@ -113,6 +113,7 @@ type MovesProcessor(db) =
 
     member x.ApplyMoves = applyMoves    
 
+
 type Initializer(target : Target, ?force : bool) =
     let force = defaultArg force false
     let srv = Smo.Server()
@@ -152,7 +153,7 @@ type Initializer(target : Target, ?force : bool) =
         db
 
     let ensureConfiguredDatabase() =
-        let db = new Smo.Database(srv, target.Database)
+        let db = srv.Databases.[target.Database]     
         if db.Tables.Contains("__MoveVersions") = false
            || db.Tables.Contains("__MoveLogs") = false then
            if force then
@@ -161,15 +162,46 @@ type Initializer(target : Target, ?force : bool) =
                 failwith "Support tables was not found, run tool with --force argument."        
         db
                 
-    let ensureDatabase() =
+    let ensureDatabase() =        
         if srv.Databases.Contains(target.Database) = false then
             if force then
                 createDatabase()
             else
                 failwith (sprintf "Database %s was not found, run tool with --force argument." target.Database)                                
         else
-            ensureConfiguredDatabase()   
+            ensureConfiguredDatabase()
           
     let db = ensureDatabase()
+
+    let backup(version) =
+        let sqlBackup = new Smo.Backup()
+        let backupTime = System.DateTime.UtcNow
+        sqlBackup.Action <- Smo.BackupActionType.Database;
+        sqlBackup.BackupSetDescription <- sprintf "Before migration. Last migration was %s. Backup date: %s %s"
+                                         version 
+                                         (backupTime.ToLongDateString())
+                                         (backupTime.ToLongTimeString())
+        sqlBackup.BackupSetName <- "Migrations"
+
+        sqlBackup.Database <- db.Name
+                 
+        sqlBackup.Initialize <- true
+        sqlBackup.Checksum <- true
+        sqlBackup.ContinueAfterError <- true
+        sqlBackup.FormatMedia <- false
+        
+        let name = sprintf "%s-%s(ver-%s).bak" 
+                            db.Name 
+                            (backupTime.ToString("yyyyMMdd-HHmmss"))
+                            version
+
+        sqlBackup.Devices.Add(new Smo.BackupDeviceItem(name, Smo.DeviceType.File));
+        sqlBackup.Incremental <- false
+        
+        sqlBackup.LogTruncation <- Smo.BackupTruncateLogType.NoTruncate;
+
+        sqlBackup.SqlBackup(srv);
+        
                                        
-    member x.Database() = db 
+    member x.Database = db 
+    member x.Backup = backup

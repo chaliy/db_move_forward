@@ -1,5 +1,6 @@
 ﻿module Helpers
 
+#if FX_ATLEAST_40
 open System
 open System.Reflection
 
@@ -50,3 +51,5 @@ let createModule name (properties : PropertyInfo seq) =
                 |> Seq.find(fun p -> p.Name = name)
             override x.GetCustomAttributes(b) = moduleAttrs
             override x.GetCustomAttributes(attributeType, b) = moduleAttrs } :> Type
+
+#endif

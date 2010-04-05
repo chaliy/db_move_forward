@@ -106,12 +106,18 @@ type MovesProcessor(db) =
             sch.Create()
             trace.Trigger(sprintf "Schema %s has been created" name)
 
+    let executeScript (script : string) =        
+        db.ExecuteNonQuery(script)
+        let name = script.Substring(0, System.Math.Min(30, script.Length))
+        trace.Trigger(sprintf "Script '%s...' has been executed" name)
+
     let applyMoves moves =
         moves
         |> List.iter(function
                     | AddTable t -> createTable t
                     | AddColumn (t, c) -> createColumn t c 
-                    | AddSchema n -> createSchema n )
+                    | AddSchema n -> createSchema n
+                    | Script s ->  executeScript s)
 
     member x.ApplyMoves = applyMoves    
     member x.Trace = trace.Publish
@@ -129,18 +135,17 @@ type Initializer(target : Target, ?force : bool) =
         |> List.map(fun n -> n(target))
         |> List.iter(target.Columns.Add)            
 
-        target.Create()
-        target               
+        target.Create()          
 
     let createSupportTables db =
         createTable db "__MoveVersions" [ fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                                         
                                           fun t -> Smo.Column(t, "Version", Smo.DataType.NVarChar(450))                                                  
-                                          fun t -> Smo.Column(t, "LastUpdated", Smo.DataType.DateTime) ] |> ignore
+                                          fun t -> Smo.Column(t, "LastUpdated", Smo.DataType.DateTime) ]
     
         createTable db "__MoveLogs" [ fun t -> Smo.Column(t, "ID", Smo.DataType.UniqueIdentifier)                                                       
                                       fun t -> Smo.Column(t, "Sequence", Smo.DataType.NVarChar(450))                                              
                                       fun t -> Smo.Column(t, "Message", Smo.DataType.Text)
-                                      fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ] |> ignore
+                                      fun t -> Smo.Column(t, "EntryDate", Smo.DataType.DateTime) ]
 
         trace.Trigger(sprintf "Support tables __MoveVersions & __MoveLogs has been created")
 

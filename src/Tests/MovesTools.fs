@@ -1,4 +1,5 @@
-﻿module ``Moves Tools Specification``
+﻿#if FX_ATLEAST_40
+module ``Moves Tools Specification``
 
 open FsSpec        
 open Helpers
@@ -93,3 +94,6 @@ module ``Describe resolving steps`` =
         let secondStep = steps |> Seq.nth(1)
         secondStep.Version.should_be_equal_to("20100104")
     }
+#else
+module MovesToolsFoo
+#endif

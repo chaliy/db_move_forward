@@ -13,7 +13,7 @@ let target = { Database = name
                Sequence = "Test" }
 let init = Initializer(target, true)
 let db = init.Database        
-let schema = new Smo.Schema(db, "SimpleSchema")
+let schema = new Smo.Schema(db, "Fake")
 schema.Create()
 let movesProcessor = new MovesProcessor(db)
 
@@ -64,4 +64,26 @@ module ``Describe apply moves`` =
                                                                
         let result = db.Tables.["RefrencerTable", schema.Name]        
         result.ForeignKeys.Count.should_be_equal_to 1 // Just single column...
+    }
+
+    let ``execute arbitrary script`` = spec {
+        movesProcessor.ApplyMoves([Moves.Script("CREATE TABLE [Fake].[ArbitraryScriptTable] 
+                                                 (
+                                                  	 Name   varchar(20)     NOT NULL
+                                                 )")])
+                                                 
+        db.Refresh()
+        let result = db.Tables.["ArbitraryScriptTable", "Fake"]                                                         
+        result.should_not_be_null
+    }
+
+    let ``execute batch script`` = spec {
+        movesProcessor.ApplyMoves([Moves.Script("CREATE TABLE [Fake].[BatchScriptTable] (Name varchar(20) NOT NULL )
+                                                 GO
+                                                 ALTER TABLE [Fake].[BatchScriptTable] ADD AnotherName VARCHAR(20) NULL
+                                                 GO")])
+                                                 
+        db.Refresh()
+        let result = db.Tables.["BatchScriptTable", "Fake"]                                                         
+        result.should_not_be_null
     }

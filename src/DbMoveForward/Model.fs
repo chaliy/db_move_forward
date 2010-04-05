@@ -32,6 +32,7 @@ type Moves =
 | AddSchema of string
 | AddTable of Table
 | AddColumn of (TableName * Column)
+| Script of string
 
 type Step = {
     Version : string

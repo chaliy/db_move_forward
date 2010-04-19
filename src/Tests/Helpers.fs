@@ -36,7 +36,7 @@ let createModule name (properties : PropertyInfo seq) =
     
     let moduleAttrs = 
         [ CompilationMappingAttribute(SourceConstructFlags.Module) ]   
-        |> List.map(fun x -> x :> obj)
+        |> List.map box
         |> List.toArray
 
     { new TypeDelegator(typeof<string>) with

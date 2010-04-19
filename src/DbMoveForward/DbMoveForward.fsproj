@@ -40,7 +40,6 @@
   <ItemGroup>
     <Compile Include="Shared.fs" />
     <Compile Include="Model.fs" />
-    <Compile Include="Denormalization.fs" />
     <Compile Include="MovesTools.fs" />
     <Compile Include="DbTools.fs" />
     <Compile Include="Runner.fs" />
@@ -63,9 +62,6 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
-    <Reference Include="NHibernate">
-      <HintPath>..\..\lib\NHib\NHibernate.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />

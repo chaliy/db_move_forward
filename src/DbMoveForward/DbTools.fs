@@ -33,7 +33,7 @@ type VersionsStuff(db : Smo.Database) =
         let result = db.ExecuteWithResults(query)
         let table = result.Tables.[0]
         if table.Rows.Count > 0 then
-            (table.Rows.[0].["Version"] :?> string)        
+            (string table.Rows.[0].["Version"])        
         else "0"
             
     member x.UpdateVersion = updateVersion
@@ -58,23 +58,22 @@ type MovesProcessor(db) =
         | Guid -> addColumnOfType Smo.DataType.UniqueIdentifier
         | PrimmaryKey ->
             // Create Column
-            let targetCol = Smo.Column(target, col.Name, Smo.DataType.UniqueIdentifier)
-            targetCol.Nullable <- false
+            let targetCol = new Smo.Column(target, col.Name, Smo.DataType.UniqueIdentifier, Nullable = false)            
             target.Columns.Add(targetCol)
             // Create index..
-            let pkeyI = Smo.Index(target, col.Name + "_PK")
-            pkeyI.IndexKeyType <- Smo.IndexKeyType.DriPrimaryKey
+            let pkeyI = Smo.Index(target, col.Name + "_PK",
+                                  IndexKeyType = Smo.IndexKeyType.DriPrimaryKey)            
             pkeyI.IndexedColumns.Add(Smo.IndexedColumn(pkeyI, col.Name))
             target.Indexes.Add(pkeyI)            
 
-        | ForeignKey referencee ->    
-            addColumnOfType Smo.DataType.UniqueIdentifier                                                                     
+        | ForeignKey (referencee, referencedColumn) ->    
+            addColumnOfType Smo.DataType.UniqueIdentifier            
             // Create foreignkey...
-            let fk = Smo.ForeignKey(target, target.Name + "_" + col.Name + "_FK")                                          
-            let fkc = Smo.ForeignKeyColumn(fk, col.Name, col.Name)
-            fk.Columns.Add(fkc)                                 
-            fk.ReferencedTable <- referencee.Name
-            fk.ReferencedTableSchema <- referencee.Schema
+            let fk = Smo.ForeignKey(target,
+                                    target.Name + "_" + col.Name + "_FK",
+                                    ReferencedTable = referencee.Name,
+                                    ReferencedTableSchema = referencee.Schema)            
+            fk.Columns.Add(Smo.ForeignKeyColumn(fk, col.Name, referencedColumn))
             target.ForeignKeys.Add(fk)            
         
                            
@@ -111,13 +110,14 @@ type MovesProcessor(db) =
         let name = script.Substring(0, System.Math.Min(30, script.Length))
         trace.Trigger(sprintf "Script '%s...' has been executed" name)
 
-    let applyMoves moves =
-        moves
+    let rec applyMoves moves =
+        moves        
         |> List.iter(function
                     | AddTable t -> createTable t
                     | AddColumn (t, c) -> createColumn t c 
                     | AddSchema n -> createSchema n
-                    | Script s ->  executeScript s)
+                    | Script s ->  executeScript s
+                    | Composite mm -> applyMoves mm)
 
     member x.ApplyMoves = applyMoves    
     member x.Trace = trace.Publish

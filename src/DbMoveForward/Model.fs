@@ -16,7 +16,7 @@ type ColumnType =
 | Guid
 | DateTime
 | PrimmaryKey
-| ForeignKey of TableName
+| ForeignKey of TableName * string
 
 type Column = {
     Name : string
@@ -33,6 +33,7 @@ type Moves =
 | AddTable of Table
 | AddColumn of (TableName * Column)
 | Script of string
+| Composite of Moves list
 
 type Step = {
     Version : string

@@ -17,6 +17,14 @@ let schema = new Smo.Schema(db, "Fake")
 schema.Create()
 let movesProcessor = new MovesProcessor(db)
 
+let dropDb() = db.Drop()
+
+let createFakeAddTable name =
+    Moves.AddTable({ Name = {Schema = schema.Name
+                             Name = name }
+                     Columns = [{ Name = (name + "ID")
+                                  Type = ColumnType.PrimmaryKey } ] })
+
 module ``Describe apply moves`` =
     
     let ``do nothing if no moves defined`` = spec {        
@@ -60,7 +68,7 @@ module ``Describe apply moves`` =
              Moves.AddTable({ Name = {Schema = schema.Name
                                       Name = "RefrencerTable" }
                               Columns = [{ Name = "RefrenceeTableID"
-                                           Type = ColumnType.ForeignKey(refrenceeName) } ] })])
+                                           Type = ColumnType.ForeignKey(refrenceeName, "RefrenceeTableID") } ] })])
                                                                
         let result = db.Tables.["RefrencerTable", schema.Name]        
         result.ForeignKeys.Count.should_be_equal_to 1 // Just single column...
@@ -87,3 +95,14 @@ module ``Describe apply moves`` =
         let result = db.Tables.["BatchScriptTable", "Fake"]                                                         
         result.should_not_be_null
     }
+    let ``move composite move`` = spec {            
+        let move = Moves.Composite([createFakeAddTable "CompositeTable1"
+                                    createFakeAddTable "CompositeTable2" ])
+
+        movesProcessor.ApplyMoves([move])
+                                                 
+        db.Refresh()
+        db.Tables.Contains("CompositeTable1", "Fake").should_be_true
+        db.Tables.Contains("CompositeTable2", "Fake").should_be_true
+    }
+        

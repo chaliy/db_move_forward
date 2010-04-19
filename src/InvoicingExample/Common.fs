@@ -34,7 +34,7 @@ let field name (t : FieldType) : Column =
 
 let reference name (e : EntityName) : Column =    
     { Name = name + "ID"
-      Type = ColumnType.ForeignKey(Utils.makeTableName e) }
+      Type = ColumnType.ForeignKey(Utils.makeTableName e, name + "ID") }
 
 let systemColumns = [
         { Name = "Version"; Type = ColumnType.Guid}
@@ -64,7 +64,7 @@ let field_to entity name (t : FieldType) =
 
 let reference_to entity name (e : EntityName) =    
     Moves.AddColumn(Utils.makeTableName entity, { Name = name + "ID"
-                                                  Type = ForeignKey(Utils.makeTableName e) })    
+                                                  Type = ForeignKey(Utils.makeTableName e, name + "ID") })    
 
 module Invoicing =
     

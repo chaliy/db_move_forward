@@ -39,7 +39,6 @@
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft F#\v4.0\Microsoft.FSharp.Targets" Condition=" Exists('$(MSBuildBinPath)\Microsoft.Build.Tasks.v4.0.dll')" />
   <ItemGroup>
     <Compile Include="Helpers.fs" />
-    <Compile Include="Denormalization.fs" />
     <Compile Include="MovesTools.fs" />
     <Compile Include="MovesProcessor.fs" />
     <Compile Include="Program.fs" />
@@ -71,9 +70,6 @@
     </Reference>
     <Reference Include="mscorlib" />
     <Reference Include="FSharp.Core" />
-    <Reference Include="NHibernate">
-      <HintPath>..\..\lib\NHib\NHibernate.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <ProjectReference Include="..\DbMoveForward\DbMoveForward.fsproj">
